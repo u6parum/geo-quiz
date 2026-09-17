@@ -1,0 +1,226 @@
+generator client {
+  provider = "prisma-client-js"
+  output   = "../src/db/generated"
+}
+
+datasource db {
+  provider = "postgresql"
+  schemas  = ["game"]
+}
+
+// ==================
+// КОМАНДЫ
+// ==================
+
+model Team {
+  id           String            @id @default(uuid())
+  name         String            @unique
+  captainId    String
+  members      TeamMember[]
+  applications TeamApplication[]
+  landmarks    Landmark[]
+  joinRequests TeamJoinRequest[]
+  gameTeams    GameTeam[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("teams")
+  @@schema("game")
+}
+
+model TeamMember {
+  id     String @id @default(uuid())
+  teamId String
+  team   Team   @relation(fields: [teamId], references: [id])
+  userId String
+
+  @@unique([teamId, userId])
+  @@map("team_members")
+  @@schema("game")
+}
+
+model TeamApplication {
+  id           String            @id @default(uuid())
+  userId       String            @unique
+  teamName     String
+  landmarkName String
+  description  String
+  hints        Json
+  status       ApplicationStatus @default(PENDING)
+  teamId       String?
+  team         Team?             @relation(fields: [teamId], references: [id])
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("team_applications")
+  @@schema("game")
+}
+
+enum ApplicationStatus {
+  PENDING
+  APPROVED
+  REJECTED
+
+  @@schema("game")
+}
+
+model TeamJoinRequest {
+  id     String            @id @default(uuid())
+  teamId String
+  team   Team              @relation(fields: [teamId], references: [id], onDelete: Cascade)
+  userId String
+  status JoinRequestStatus @default(PENDING)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([teamId, userId])
+  @@map("team_join_requests")
+  @@schema("game")
+}
+
+enum JoinRequestStatus {
+  PENDING
+  APPROVED
+  REJECTED
+
+  @@schema("game")
+}
+
+// ==================
+// ДОСТОПРИМЕЧАТЕЛЬНОСТИ
+// ==================
+
+model Landmark {
+  id          String         @id @default(uuid())
+  teamId      String         @unique
+  team        Team           @relation(fields: [teamId], references: [id])
+  name        String
+  description String
+  hints       Json
+  status      LandmarkStatus @default(PENDING)
+
+  @@map("landmarks")
+  @@schema("game")
+}
+
+enum LandmarkStatus {
+  PENDING
+  APPROVED
+  REJECTED
+
+  @@schema("game")
+}
+
+// ==================
+// ИГРЫ
+// ==================
+
+model Game {
+  id              String         @id @default(uuid())
+  status          GameStatus     @default(LOBBY)
+  durationSeconds Int
+  hintsSchedule   Int[]
+  questionWindows Int[]
+  createdById     String
+  teams           GameTeam[]
+  questions       Question[]
+  guesses         Guess[]
+  snapshots       GameSnapshot[]
+
+  createdAt  DateTime  @default(now())
+  startedAt  DateTime?
+  finishedAt DateTime?
+
+  @@map("games")
+  @@schema("game")
+}
+
+enum GameStatus {
+  LOBBY
+  MODERATION
+  ACTIVE
+  FINISHED
+
+  @@schema("game")
+}
+
+model GameTeam {
+  id     String @id @default(uuid())
+  gameId String
+  game   Game   @relation(fields: [gameId], references: [id])
+  teamId String
+  team   Team   @relation(fields: [teamId], references: [id])
+  score  Int    @default(0)
+
+  @@unique([gameId, teamId])
+  @@map("game_teams")
+  @@schema("game")
+}
+
+// ==================
+// ВОПРОСЫ И ОТВЕТЫ
+// ==================
+
+model Question {
+  id         String  @id @default(uuid())
+  gameId     String
+  game       Game    @relation(fields: [gameId], references: [id])
+  fromTeamId String
+  toTeamId   String
+  text       String
+  askedAt    Int
+  answered   Boolean @default(false)
+  answer     Answer?
+
+  @@map("questions")
+  @@schema("game")
+}
+
+model Answer {
+  id         String   @id @default(uuid())
+  questionId String   @unique
+  question   Question @relation(fields: [questionId], references: [id])
+  fromTeamId String
+  answer     String
+  answeredAt Int
+
+  @@map("answers")
+  @@schema("game")
+}
+
+// ==================
+// ДОГАДКИ
+// ==================
+
+model Guess {
+  id           String  @id @default(uuid())
+  gameId       String
+  game         Game    @relation(fields: [gameId], references: [id])
+  teamId       String
+  targetTeamId String
+  text         String
+  isCorrect    Boolean @default(false)
+  earnedScore  Int     @default(0)
+  elapsedAt    Int
+
+  @@map("guesses")
+  @@schema("game")
+}
+
+// ==================
+// СНАПШОТЫ
+// ==================
+
+model GameSnapshot {
+  id        String   @id @default(uuid())
+  gameId    String   @unique
+  game      Game     @relation(fields: [gameId], references: [id], onDelete: Cascade)
+  state     Json
+  updatedAt DateTime @updatedAt
+
+  @@map("game_snapshots")
+  @@schema("game")
+}

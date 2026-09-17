@@ -1,0 +1,15 @@
+export enum EngineEvent {
+  TimeSync = 'time_sync',
+  SubPhaseChanged = 'sub_phase_changed',
+  HintsRevealed = 'hints_revealed',
+  GuessResult = 'guess_result',
+  QuestionAsked = 'question_asked',
+  QuestionAnswered = 'question_answered',
+  GameStarted = 'game_started',
+  GameEnded = 'game_ended',
+  LandmarksAssigned = 'landmarks_assigned',
+  LandmarkSubmitted = 'landmark_submitted',
+  LandmarkLoaded = 'landmark_loaded',
+  AllLandmarksApproved = 'all_landmarks_approved',
+  QuestionCountersReset = 'question_counters_reset',
+}

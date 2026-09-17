@@ -1,0 +1,31 @@
+{
+  "name": "geo-quiz",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "type": "module",
+  "scripts": {
+    "dev": "nx run-many --target=dev --all --parallel=3",
+    "dev:auth": "nx run auth-service:dev",
+    "dev:game": "nx run game-service:dev",
+    "dev:web": "nx run web:dev",
+    "build": "nx run-many --target=build --all",
+    "test": "nx run-many --target=test --all",
+    "db:studio": "pnpm --filter game-service exec prisma studio --port 5555"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "packageManager": "pnpm@12.3.4",
+  "devDependencies": {
+    "@eslint/js": "^10.0.1",
+    "concurrently": "^10.0.5",
+    "eslint": "^10.2.1",
+    "eslint-plugin-react-hooks": "^7.1.1",
+    "eslint-plugin-react-refresh": "^0.5.2",
+    "globals": "^17.5.0",
+    "nx": "23.2.0",
+    "typescript-eslint": "^8.70.0"
+  },
+  "nx": {}
+}

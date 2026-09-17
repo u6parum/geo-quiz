@@ -1,0 +1,451 @@
+{
+  "graph": {
+    "nodes": {
+      "auth-service": {
+        "name": "auth-service",
+        "type": "app",
+        "data": {
+          "root": "apps/auth-service",
+          "targets": {
+            "dev": {
+              "dependsOn": [
+                "^build"
+              ],
+              "parallelism": true,
+              "executor": "nx:run-script",
+              "metadata": {
+                "scriptContent": "tsx watch src/index.ts",
+                "runCommand": "pnpm run dev"
+              },
+              "options": {
+                "script": "dev"
+              },
+              "configurations": {}
+            },
+            "build": {
+              "dependsOn": [
+                "^build"
+              ],
+              "executor": "nx:run-script",
+              "metadata": {
+                "scriptContent": "tsc",
+                "runCommand": "pnpm run build"
+              },
+              "options": {
+                "script": "build"
+              },
+              "configurations": {},
+              "parallelism": true
+            },
+            "start": {
+              "executor": "nx:run-script",
+              "metadata": {
+                "scriptContent": "node dist/index.js",
+                "runCommand": "pnpm run start"
+              },
+              "options": {
+                "script": "start"
+              },
+              "configurations": {},
+              "parallelism": true
+            },
+            "db:migrate": {
+              "executor": "nx:run-script",
+              "metadata": {
+                "scriptContent": "prisma migrate dev",
+                "runCommand": "pnpm run db:migrate"
+              },
+              "options": {
+                "script": "db:migrate"
+              },
+              "configurations": {},
+              "parallelism": true
+            },
+            "db:generate": {
+              "executor": "nx:run-script",
+              "metadata": {
+                "scriptContent": "prisma generate",
+                "runCommand": "pnpm run db:generate"
+              },
+              "options": {
+                "script": "db:generate"
+              },
+              "configurations": {},
+              "parallelism": true
+            }
+          },
+          "name": "auth-service",
+          "tags": [
+            "npm:private"
+          ],
+          "metadata": {
+            "targetGroups": {
+              "NPM Scripts": [
+                "dev",
+                "build",
+                "start",
+                "db:migrate",
+                "db:generate"
+              ]
+            },
+            "js": {
+              "packageName": "auth-service",
+              "packageVersion": "0.0.0",
+              "isInPackageManagerWorkspaces": true
+            }
+          },
+          "implicitDependencies": []
+        }
+      },
+      "game-service": {
+        "name": "game-service",
+        "type": "app",
+        "data": {
+          "root": "apps/game-service",
+          "targets": {
+            "dev": {
+              "dependsOn": [
+                "^build"
+              ],
+              "parallelism": true,
+              "executor": "nx:run-script",
+              "metadata": {
+                "scriptContent": "tsx watch src/index.ts",
+                "runCommand": "pnpm run dev"
+              },
+              "options": {
+                "script": "dev"
+              },
+              "configurations": {}
+            },
+            "build": {
+              "dependsOn": [
+                "^build"
+              ],
+              "executor": "nx:run-script",
+              "metadata": {
+                "scriptContent": "tsc",
+                "runCommand": "pnpm run build"
+              },
+              "options": {
+                "script": "build"
+              },
+              "configurations": {},
+              "parallelism": true
+            },
+            "start": {
+              "executor": "nx:run-script",
+              "metadata": {
+                "scriptContent": "node dist/index.js",
+                "runCommand": "pnpm run start"
+              },
+              "options": {
+                "script": "start"
+              },
+              "configurations": {},
+              "parallelism": true
+            },
+            "db:migrate": {
+              "executor": "nx:run-script",
+              "metadata": {
+                "scriptContent": "prisma migrate dev",
+                "runCommand": "pnpm run db:migrate"
+              },
+              "options": {
+                "script": "db:migrate"
+              },
+              "configurations": {},
+              "parallelism": true
+            },
+            "db:generate": {
+              "executor": "nx:run-script",
+              "metadata": {
+                "scriptContent": "prisma generate",
+                "runCommand": "pnpm run db:generate"
+              },
+              "options": {
+                "script": "db:generate"
+              },
+              "configurations": {},
+              "parallelism": true
+            }
+          },
+          "name": "game-service",
+          "tags": [
+            "npm:private"
+          ],
+          "metadata": {
+            "targetGroups": {
+              "NPM Scripts": [
+                "dev",
+                "build",
+                "start",
+                "db:migrate",
+                "db:generate"
+              ]
+            },
+            "js": {
+              "packageName": "game-service",
+              "packageVersion": "0.0.0",
+              "isInPackageManagerWorkspaces": true
+            }
+          },
+          "implicitDependencies": []
+        }
+      },
+      "@geo-quiz/shared": {
+        "name": "@geo-quiz/shared",
+        "type": "lib",
+        "data": {
+          "root": "packages/shared",
+          "name": "@geo-quiz/shared",
+          "tags": [
+            "npm:private"
+          ],
+          "metadata": {
+            "targetGroups": {},
+            "description": "",
+            "js": {
+              "packageName": "@geo-quiz/shared",
+              "packageVersion": "1.0.0",
+              "packageExports": {
+                ".": "./src/index.ts",
+                "./*": "./src/*"
+              },
+              "packageMain": "./src/index.ts",
+              "isInPackageManagerWorkspaces": true
+            }
+          },
+          "targets": {},
+          "implicitDependencies": []
+        }
+      },
+      "web": {
+        "name": "web",
+        "type": "app",
+        "data": {
+          "root": "apps/web",
+          "targets": {
+            "dev": {
+              "dependsOn": [
+                "^build"
+              ],
+              "parallelism": true,
+              "executor": "nx:run-script",
+              "metadata": {
+                "scriptContent": "vite",
+                "runCommand": "pnpm run dev"
+              },
+              "options": {
+                "script": "dev"
+              },
+              "configurations": {}
+            },
+            "build": {
+              "dependsOn": [
+                "^build"
+              ],
+              "executor": "nx:run-script",
+              "metadata": {
+                "scriptContent": "tsc -b && vite build",
+                "runCommand": "pnpm run build"
+              },
+              "options": {
+                "script": "build"
+              },
+              "configurations": {},
+              "parallelism": true
+            },
+            "test": {
+              "dependsOn": [
+                "^test"
+              ],
+              "executor": "nx:run-script",
+              "metadata": {
+                "scriptContent": "vitest",
+                "runCommand": "pnpm run test"
+              },
+              "options": {
+                "script": "test"
+              },
+              "configurations": {},
+              "parallelism": true
+            },
+            "lint": {
+              "executor": "nx:run-script",
+              "metadata": {
+                "scriptContent": "eslint .",
+                "runCommand": "pnpm run lint"
+              },
+              "options": {
+                "script": "lint"
+              },
+              "configurations": {},
+              "parallelism": true
+            },
+            "preview": {
+              "executor": "nx:run-script",
+              "metadata": {
+                "scriptContent": "vite preview",
+                "runCommand": "pnpm run preview"
+              },
+              "options": {
+                "script": "preview"
+              },
+              "configurations": {},
+              "parallelism": true
+            }
+          },
+          "name": "web",
+          "tags": [
+            "npm:private"
+          ],
+          "metadata": {
+            "targetGroups": {
+              "NPM Scripts": [
+                "dev",
+                "test",
+                "build",
+                "lint",
+                "preview"
+              ]
+            },
+            "js": {
+              "packageName": "web",
+              "packageVersion": "0.0.0",
+              "isInPackageManagerWorkspaces": true
+            }
+          },
+          "implicitDependencies": []
+        }
+      },
+      "geo-quiz": {
+        "name": "geo-quiz",
+        "type": "lib",
+        "data": {
+          "root": ".",
+          "targets": {
+            "dev": {
+              "dependsOn": [
+                "^build"
+              ],
+              "parallelism": true,
+              "executor": "nx:run-script",
+              "metadata": {
+                "scriptContent": "nx run-many --target=dev --all --parallel=3",
+                "runCommand": "pnpm run dev"
+              },
+              "options": {
+                "script": "dev"
+              },
+              "configurations": {}
+            },
+            "build": {
+              "dependsOn": [
+                "^build"
+              ],
+              "executor": "nx:run-script",
+              "metadata": {
+                "scriptContent": "nx run-many --target=build --all",
+                "runCommand": "pnpm run build"
+              },
+              "options": {
+                "script": "build"
+              },
+              "configurations": {},
+              "parallelism": true
+            },
+            "test": {
+              "dependsOn": [
+                "^test"
+              ],
+              "executor": "nx:run-script",
+              "metadata": {
+                "scriptContent": "nx run-many --target=test --all",
+                "runCommand": "pnpm run test"
+              },
+              "options": {
+                "script": "test"
+              },
+              "configurations": {},
+              "parallelism": true
+            },
+            "dev:auth": {
+              "executor": "nx:run-script",
+              "metadata": {
+                "scriptContent": "nx run auth-service:dev",
+                "runCommand": "pnpm run dev:auth"
+              },
+              "options": {
+                "script": "dev:auth"
+              },
+              "configurations": {},
+              "parallelism": true
+            },
+            "dev:game": {
+              "executor": "nx:run-script",
+              "metadata": {
+                "scriptContent": "nx run game-service:dev",
+                "runCommand": "pnpm run dev:game"
+              },
+              "options": {
+                "script": "dev:game"
+              },
+              "configurations": {},
+              "parallelism": true
+            },
+            "dev:web": {
+              "executor": "nx:run-script",
+              "metadata": {
+                "scriptContent": "nx run web:dev",
+                "runCommand": "pnpm run dev:web"
+              },
+              "options": {
+                "script": "dev:web"
+              },
+              "configurations": {},
+              "parallelism": true
+            }
+          },
+          "name": "geo-quiz",
+          "tags": [
+            "npm:public"
+          ],
+          "metadata": {
+            "targetGroups": {
+              "NPM Scripts": [
+                "dev",
+                "dev:auth",
+                "dev:game",
+                "dev:web",
+                "build",
+                "test"
+              ]
+            },
+            "description": "",
+            "js": {
+              "packageName": "geo-quiz",
+              "packageVersion": "1.0.0",
+              "packageMain": "index.js",
+              "isInPackageManagerWorkspaces": true
+            }
+          },
+          "implicitDependencies": []
+        }
+      }
+    },
+    "dependencies": {
+      "auth-service": [],
+      "game-service": [],
+      "@geo-quiz/shared": [],
+      "web": [
+        {
+          "source": "web",
+          "target": "@geo-quiz/shared",
+          "type": "static"
+        }
+      ],
+      "geo-quiz": []
+    }
+  }
+}

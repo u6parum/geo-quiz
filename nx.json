@@ -1,0 +1,14 @@
+{
+  "$schema": "./node_modules/nx/schemas/nx-schema.json",
+  "targetDefaults": {
+    "dev": {
+      "parallelism": true
+    },
+    "build": {
+      "dependsOn": [
+        "^build"
+      ]
+    }
+  },
+  "analytics": false
+}

@@ -1,0 +1,4 @@
+apps/*/src/db/generated/
+node_modules
+.nx
+senior
