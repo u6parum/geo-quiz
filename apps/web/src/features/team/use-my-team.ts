@@ -20,8 +20,6 @@ export const useMyTeam = (gameId: string) => {
   }, []);
 
   const teamForGame = useMemo(() => {
-    console.log('memo');
-
     return myTeams.find((team) => team.games.some((g) => g.id === gameId));
   }, [myTeams]);
 

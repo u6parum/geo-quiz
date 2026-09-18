@@ -2,7 +2,7 @@ import type { Hint } from '../landmark';
 
 export type JoinGameEvent = {
   type: 'JOIN_GAME';
-  payload: { gameId: string; teamId: string; teamName: string };
+  payload: { gameId: string; teamId: string };
 };
 
 export type SubmitLandmarkEvent = {

@@ -20,17 +20,22 @@ import type {
   TeamJoinedEvent,
 } from '@shared/contracts/websocket/server';
 import type { ClientEvent } from '@shared/contracts/websocket/client';
+import { serializeEvent } from './helpers';
+import type { SocketConfig } from './types';
 
-interface SocketConfig {
-  url: string;
-  gameId: string;
-  teamId: string;
-  reconnectDelay?: number;
-  maxReconnectAttempts?: number;
-}
+const DEFAULT_PING_INTERVAL_MS = 5000;
+const DEFAULT_RECONNECT_DELAY_MS = 2000;
+const DEFAULT_MAX_RECONNECT_ATTEMPTS = 5;
 
 export const createSocketConnection = (config: SocketConfig) => {
-  const { url, gameId, teamId, reconnectDelay = 2000, maxReconnectAttempts = 5 } = config;
+  const {
+    url,
+    gameId,
+    teamId,
+    pingInterval = DEFAULT_PING_INTERVAL_MS,
+    reconnectDelay = DEFAULT_RECONNECT_DELAY_MS,
+    maxReconnectAttempts = DEFAULT_MAX_RECONNECT_ATTEMPTS,
+  } = config;
 
   // === СОБЫТИЯ ===
   const connectRequested = createEvent();
@@ -81,11 +86,12 @@ export const createSocketConnection = (config: SocketConfig) => {
         ws.onopen = () => {
           // После подключения отправляем JOIN_GAME
           ws.send(
-            JSON.stringify({
+            serializeEvent({
               type: 'JOIN_GAME',
               payload: { gameId, teamId },
-            } as ClientEvent),
+            }),
           );
+
           resolve(ws);
         };
 
@@ -112,7 +118,7 @@ export const createSocketConnection = (config: SocketConfig) => {
         type: 'PING',
         payload: { clientTime: Date.now() },
       });
-    }, 5000); // Каждые 5 секунд
+    }, pingInterval);
   });
 
   const stopPingFx = createEffect((timer: ReturnType<typeof setInterval>) => {
@@ -142,32 +148,27 @@ export const createSocketConnection = (config: SocketConfig) => {
   });
 
   // Обработка ошибок
-  sample({
-    clock: connectFx.fail,
-    fn: ({ error }) => error.message,
-    target: $error,
-  });
+  $error.on(errorReceived, (_, { message }) => message);
+  $error.on(connectFx.fail, (_, { error: { message } }) => message);
 
   // Сброс счётчика реконнектов при успешном подключении
   $reconnectAttempts.reset(connectFx.done);
 
   // === ПЕРЕПОДКЛЮЧЕНИЕ ===
+  const $shouldReconnect = createStore(true)
+    .on(connectRequested, () => true)
+    .on(disconnectRequested, () => false);
+
   const reconnectFx = createEffect((nextAttempt: number) => {
-    setTimeout(() => connectRequested(), reconnectDelay * Math.pow(2, nextAttempt - 1)); // exponential backoff TODO вечное переподключение при нормальном закрытии!
+    setTimeout(() => connectRequested(), reconnectDelay * Math.pow(2, nextAttempt - 1)); // exponential backoff
   });
 
   sample({
     clock: socketClose,
-    source: $reconnectAttempts,
-    filter: (attempts) => attempts < maxReconnectAttempts,
-    fn: (attempts) => attempts + 1,
+    source: { attempts: $reconnectAttempts, shouldReconnect: $shouldReconnect },
+    filter: ({ attempts, shouldReconnect }) => shouldReconnect && attempts < maxReconnectAttempts,
+    fn: ({ attempts }) => attempts + 1,
     target: [$reconnectAttempts, reconnectFx],
-  });
-
-  sample({
-    clock: errorReceived,
-    fn: (error) => error.message,
-    target: $error,
   });
 
   // === ОТПРАВКА СООБЩЕНИЙ ===
@@ -178,7 +179,7 @@ export const createSocketConnection = (config: SocketConfig) => {
         throw new Error('WebSocket не подключен');
       }
 
-      ws.send(JSON.stringify(event));
+      ws.send(serializeEvent(event));
     },
   });
 
