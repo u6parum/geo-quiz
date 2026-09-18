@@ -1,5 +1,5 @@
 import { combine, createEffect, createEvent, createStore, sample } from 'effector';
-import { not } from 'patronum';
+import { interval, not } from 'patronum';
 import { teamApi } from './api';
 import type { MyGame, MyTeam, TeamJoinRequest, TeamMemberInfo, TeamPublic, TeamWithLandmark } from './types';
 import { createGate } from 'effector-react';
@@ -241,4 +241,26 @@ export const $myGames = combine($myTeams, (teams) => {
 
   // Сортируем по дате старта (свежие сверху)
   return games.sort(stringSorter('startedAt'));
+});
+
+const { tick: myGamesPollingTick } = interval({
+  timeout: 5000,
+  start: MyGamesGate.open,
+  stop: MyGamesGate.close,
+});
+
+// На каждый тик — перезагружаем команды, если они есть
+sample({
+  clock: myGamesPollingTick,
+  source: $myTeams,
+  filter: (teams) => teams.length > 0,
+  target: loadMyTeamsFx,
+});
+
+// При открытии Gate — загружаем команды, если стор пуст
+sample({
+  clock: MyGamesGate.open,
+  source: $myTeams,
+  filter: (teams) => teams.length === 0,
+  target: loadMyTeamsFx,
 });
