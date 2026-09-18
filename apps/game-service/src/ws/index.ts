@@ -4,8 +4,8 @@ import type { ClientEvent, JoinGameEvent } from '@shared/contracts';
 import { logger } from '@shared/utils/logger';
 import { gameManager } from '../services/game-manager';
 import { gameRepo } from '../db/repositories/game.repo';
-import { addConnection, removeConnection, sendTo } from './connections';
-import { getTokenFromCookie, socketMessage } from './utils';
+import { addAdminConnection, addConnection, removeAdminConnection, removeConnection, sendTo } from './connections';
+import { getTokenFromCookie, mapTeamsToState, socketMessage } from './utils';
 import { JwtPayload } from './types';
 
 export function setupWebSocket(wss: WebSocketServer, jwtSecret: string) {
@@ -54,6 +54,83 @@ export function setupWebSocket(wss: WebSocketServer, jwtSecret: string) {
               return ws.close(4001, 'Invalid token');
             }
 
+            const game = await gameRepo.findById(gameId);
+
+            if (!game) {
+              ws.send(
+                socketMessage({
+                  type: 'ERROR',
+                  payload: { message: 'Игра не найдена', code: 'GAME_NOT_FOUND' },
+                }),
+              );
+
+              return ws.close(4004, 'Game not found');
+            }
+
+            // ВЕТКА АДМИНА: без teamId, только для ADMIN
+            if (!teamId && user.role === 'ADMIN') {
+              currentGameId = gameId;
+
+              addAdminConnection(gameId, ws);
+
+              logger.info(`Админ подключился к мониторингу игры ${gameId}`);
+
+              const engine = gameManager.getGame(gameId);
+
+              if (engine) {
+                const state = engine.getState();
+
+                // Игра активна — отправляем полное состояние
+                ws.send(
+                  socketMessage({
+                    type: 'GAME_STATE',
+                    payload: {
+                      phase: engine.getPhase(),
+                      subPhase: engine.getSubPhase(),
+                      elapsedSeconds: state.elapsedSeconds,
+                      serverTime: Date.now(),
+                      teams: mapTeamsToState(state.teams),
+                      yourTeamId: '',
+                      config: {
+                        durationSeconds: state.durationSeconds,
+                        hintsSchedule: state.hintsSchedule,
+                        questionWindows: state.questionWindows,
+                      },
+                    },
+                  }),
+                );
+
+                ws.send(
+                  socketMessage({
+                    type: 'LEADERBOARD_UPDATE',
+                    payload: engine.getLeaderboard(),
+                  }),
+                );
+              } else {
+                // Игра ещё не запущена
+                ws.send(
+                  socketMessage({
+                    type: 'GAME_STATE',
+                    payload: {
+                      phase: game.status,
+                      subPhase: 'before_hints_1',
+                      elapsedSeconds: 0,
+                      serverTime: Date.now(),
+                      teams: [],
+                      yourTeamId: '',
+                      config: {
+                        durationSeconds: game.durationSeconds,
+                        hintsSchedule: game.hintsSchedule,
+                        questionWindows: game.questionWindows,
+                      },
+                    },
+                  }),
+                );
+              }
+
+              break;
+            }
+
             // === ПРОВЕРКА УЧАСТИЯ КОМАНДЫ В ИГРЕ ===
             const isParticipant = await gameRepo.isTeamParticipant(gameId, teamId);
 
@@ -79,12 +156,11 @@ export function setupWebSocket(wss: WebSocketServer, jwtSecret: string) {
             logger.info(`Команда ${teamId} подключилась к игре ${gameId}`);
 
             // Проверяем, запущена ли игра
-            const game = await gameRepo.findById(gameId);
             const engine = gameManager.getGame(gameId);
 
-            if (!engine || game?.status !== 'ACTIVE') {
+            if (!engine || game.status !== 'ACTIVE') {
               // Игра завершена — отправляем финальные результаты
-              if (game?.status === 'FINISHED') {
+              if (game.status === 'FINISHED') {
                 logger.info(`Команда ${teamId} подключилась к завершённой игре ${gameId}`);
 
                 const finalScores = await gameRepo.getGameResults(gameId);
@@ -119,21 +195,21 @@ export function setupWebSocket(wss: WebSocketServer, jwtSecret: string) {
               }
 
               // Игра ещё не запущена — отправляем состояние ожидания
-              logger.info(`Команда ${teamId} ждёт старта игры ${gameId} (фаза: ${game?.status})`);
+              logger.info(`Команда ${teamId} ждёт старта игры ${gameId} (фаза: ${game.status})`);
 
               sendTo(teamId, {
                 type: 'GAME_STATE',
                 payload: {
-                  phase: game?.status ?? 'LOBBY',
+                  phase: game.status,
                   subPhase: 'before_hints_1',
                   elapsedSeconds: 0,
                   serverTime: Date.now(),
                   teams: [],
                   yourTeamId: teamId,
                   config: {
-                    durationSeconds: game?.durationSeconds ?? 0,
-                    hintsSchedule: game?.hintsSchedule ?? [],
-                    questionWindows: game?.questionWindows ?? [],
+                    durationSeconds: game.durationSeconds,
+                    hintsSchedule: game.hintsSchedule,
+                    questionWindows: game.questionWindows,
                   },
                 },
               });
@@ -275,11 +351,20 @@ export function setupWebSocket(wss: WebSocketServer, jwtSecret: string) {
     });
 
     ws.on('close', () => {
-      logger.info(`Отключение команды: ${currentTeamId}`);
-
       if (currentTeamId) {
-        removeConnection(currentTeamId, ws);
+        logger.info(`Отключение команды: ${currentTeamId}`);
+
+        return removeConnection(currentTeamId, ws);
       }
+
+      if (currentGameId && !currentTeamId) {
+        logger.info(`Отключение админа от игры ${currentGameId}`);
+
+        // был админ
+        return removeAdminConnection(currentGameId, ws);
+      }
+
+      logger.info('Отключение неавторизованного соединения');
     });
 
     ws.on('error', (error) => {

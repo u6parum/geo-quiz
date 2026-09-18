@@ -2,7 +2,7 @@ import { createBrowserRouter, Navigate } from 'react-router-dom';
 import { MyTeamApplicationPage, NewTeamApplicationPage } from '@pages/team-application';
 import { RegisterPage, LoginPage } from '@pages/auth';
 import { DashboardPage } from '@pages/dashboard';
-import { AdminApplicationsPage, AdminGamesPage, AdminCreateGamePage } from '@pages/admin';
+import { AdminApplicationsPage, AdminGamesPage, AdminCreateGamePage, GameMonitorPage } from '@pages/admin';
 import { RequireAuth, RequireAdmin, GuestOnly } from '@features/auth';
 import { NotFoundPage, RouteErrorPage } from '@pages/errors';
 import { GamePage } from '@pages/game';
@@ -40,6 +40,7 @@ export const router = createBrowserRouter([
           { path: '/admin/applications', element: <AdminApplicationsPage /> },
           { path: '/admin/games', element: <AdminGamesPage /> },
           { path: '/admin/games/new', element: <AdminCreateGamePage /> },
+          { path: '/admin/games/:gameId/monitor', element: <GameMonitorPage /> },
         ],
       },
       {

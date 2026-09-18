@@ -3,6 +3,7 @@ import { logger } from '@shared/utils/logger';
 import { GameEngine } from '../engine/game-engine';
 import { gameRepo } from '../db/repositories/game.repo';
 import { setupEngineEvents } from '../ws/engine-events';
+import { mapTeamsToState } from '../ws/utils';
 import { sendTo } from '../ws/connections';
 
 import type { FinalScores } from '../engine/types';
@@ -54,11 +55,7 @@ class GameManager {
           subPhase: 'before_hints_1',
           elapsedSeconds: 0,
           serverTime: Date.now(),
-          teams: Array.from(state.teams.values()).map((t) => ({
-            id: t.id,
-            name: t.name,
-            score: t.score,
-          })),
+          teams: mapTeamsToState(state.teams),
           yourTeamId: team.id,
           config: {
             durationSeconds: state.durationSeconds,

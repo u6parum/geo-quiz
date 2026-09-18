@@ -18,9 +18,11 @@ import type {
   QuestionHistoryRestoreEvent,
   QuestionCountersResetEvent,
   TeamJoinedEvent,
+  FatalErrorCode,
+  GameErrorCode,
 } from '@shared/contracts/websocket/server';
 import type { ClientEvent } from '@shared/contracts/websocket/client';
-import { serializeEvent } from './helpers';
+import { isFatalError, serializeEvent } from './helpers';
 import type { SocketConfig } from './types';
 
 const DEFAULT_PING_INTERVAL_MS = 5000;
@@ -31,7 +33,7 @@ export const createSocketConnection = (config: SocketConfig) => {
   const {
     url,
     gameId,
-    teamId,
+    teamId = '',
     pingInterval = DEFAULT_PING_INTERVAL_MS,
     reconnectDelay = DEFAULT_RECONNECT_DELAY_MS,
     maxReconnectAttempts = DEFAULT_MAX_RECONNECT_ATTEMPTS,
@@ -147,17 +149,27 @@ export const createSocketConnection = (config: SocketConfig) => {
     target: startPingFx,
   });
 
-  // Обработка ошибок
+  // === ОБРАБОТКА ОШИБОК ===
+
+  // Эмитится только при фатальных ошибках, после которых не будем реконнектиться
+  const fatalErrorReceived = errorReceived.filter({
+    fn: (error) => isFatalError(error.code),
+  });
+
+  const $fatalError = createStore<string | null>(null)
+    .on(fatalErrorReceived, (_, error) => error.message)
+    .on(connectRequested, () => null);
+
   $error.on(errorReceived, (_, { message }) => message);
   $error.on(connectFx.fail, (_, { error: { message } }) => message);
-
-  // Сброс счётчика реконнектов при успешном подключении
-  $reconnectAttempts.reset(connectFx.done);
 
   // === ПЕРЕПОДКЛЮЧЕНИЕ ===
   const $shouldReconnect = createStore(true)
     .on(connectRequested, () => true)
-    .on(disconnectRequested, () => false);
+    .on([gameEndedReceived, disconnectRequested, fatalErrorReceived], () => false);
+
+  // Сброс счётчика реконнектов при успешном подключении
+  $reconnectAttempts.reset(connectFx.done);
 
   const reconnectFx = createEffect((nextAttempt: number) => {
     setTimeout(() => connectRequested(), reconnectDelay * Math.pow(2, nextAttempt - 1)); // exponential backoff
@@ -204,6 +216,24 @@ export const createSocketConnection = (config: SocketConfig) => {
     target: stopPingFx,
   });
 
+  // Дисконнект через 2 сек. после GAME_ENDED
+  const disconnectAfterEndFx = createEffect(
+    () =>
+      new Promise<void>((resolve) => {
+        setTimeout(resolve, 2000);
+      }),
+  );
+
+  sample({
+    clock: gameEndedReceived,
+    target: disconnectAfterEndFx,
+  });
+
+  sample({
+    clock: disconnectAfterEndFx.done,
+    target: disconnectRequested,
+  });
+
   $isConnected.on(socketClose, () => false);
   $isConnected.on(connectFx.done, () => true);
 
@@ -211,6 +241,7 @@ export const createSocketConnection = (config: SocketConfig) => {
     // Сторы
     $isConnected,
     $error,
+    $fatalError,
     $reconnectAttempts,
 
     // События управления

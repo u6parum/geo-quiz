@@ -1,22 +1,16 @@
 import { useMemo } from 'react';
-import { createEffect, createEvent, sample, type EventCallable } from 'effector';
+import { createEffect, sample, type EventCallable } from 'effector';
 
 import type { ClientEvent } from '@shared/contracts/websocket/client';
 
 import { createGameRoom } from '../../game-room';
 import { createSocketConnection } from './socket.factory';
 import { mapEventsToSocket } from './socket-events-mapper';
+import { buildSocketUrl } from './helpers';
 
 interface UseGameSyncParams {
   teamId: string;
   gameId: string;
-}
-
-function buildSocketUrl(): string {
-  // В dev — через Vite proxy на /api/ws
-  // В prod — тот же origin, что и приложение
-  const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
-  return `${protocol}//${window.location.host}/api/ws`;
 }
 
 function createGameSync(params: UseGameSyncParams) {
@@ -31,12 +25,8 @@ function createGameSync(params: UseGameSyncParams) {
 
   const serverEvents = mapEventsToSocket(socket);
 
-  // 2. Событие старта игры (придёт из админки)
-  const startGameEvent = createEvent<unknown>();
-
   // 3. Создаём комнату, подключённую к сокету
   const room = createGameRoom({
-    startGameEvent,
     serverEvents,
     localTeamId: teamId,
   });
@@ -46,7 +36,7 @@ function createGameSync(params: UseGameSyncParams) {
     target: socket.messageSent,
   });
 
-  // 🔥 Подписываем sendToServer из текущей команды
+  // Подписываем sendToServer из текущей команды
   const subscribeTeamToSocket = createEffect((send: EventCallable<ClientEvent>) => {
     sample({
       clock: send,
@@ -64,11 +54,9 @@ function createGameSync(params: UseGameSyncParams) {
   return {
     room,
     socket,
-    startGameEvent,
   };
 }
 
-// React-хук
 export function useGameSync(params: UseGameSyncParams) {
   return useMemo(() => createGameSync(params), [params.teamId, params.gameId]);
 }

@@ -1,4 +1,5 @@
 import type { ServerEvent } from '@shared/contracts';
+import { GameState } from '../engine/types';
 
 export function getTokenFromCookie(cookieHeader?: string): string | null {
   if (!cookieHeader) {
@@ -20,4 +21,12 @@ export function getTokenFromCookie(cookieHeader?: string): string | null {
 
 export function socketMessage<T extends ServerEvent>(event: T) {
   return JSON.stringify(event);
+}
+
+export function mapTeamsToState(teams: GameState['teams']) {
+  return Array.from(teams.values()).map((team) => ({
+    id: team.id,
+    name: team.name,
+    score: team.score,
+  }));
 }

@@ -18,17 +18,19 @@ export const GamePage: React.FC = () => {
 
   const { room, socket } = useGameSync({ teamId, gameId });
 
-  const [config, phase, subPhase, elapsed, currentTeam, teams, leaderboard, connectionError, isConnected] = useUnit([
-    room.$config,
-    room.$phase,
-    room.$subPhase,
-    room.$elapsedSeconds,
-    room.$currentTeam,
-    room.$teams,
-    room.$leaderboard,
-    room.$connectionError,
-    socket.$isConnected,
-  ]);
+  const [config, phase, subPhase, elapsed, currentTeam, teams, leaderboard, connectionError, isConnected, fatalError] =
+    useUnit([
+      room.$config,
+      room.$phase,
+      room.$subPhase,
+      room.$elapsedSeconds,
+      room.$currentTeam,
+      room.$teams,
+      room.$leaderboard,
+      room.$connectionError,
+      socket.$isConnected,
+      socket.$fatalError,
+    ]);
 
   const navigate = useNavigate();
 
@@ -41,12 +43,28 @@ export const GamePage: React.FC = () => {
     return socket.disconnectRequested;
   }, [gameId, teamId]);
 
+  if (fatalError) {
+    return (
+      <div className="min-h-screen flex items-center justify-center p-6">
+        <div className="max-w-md text-center">
+          <h2 className="text-xl font-bold text-red-600">Не удалось подключиться</h2>
+          <p className="text-gray-600 mt-2">{fatalError}</p>
+          <Button onClick={() => navigate('/games')} className="mt-4">
+            К моим играм
+          </Button>
+        </div>
+      </div>
+    );
+  }
+
   if (connectionError) {
     return (
-      <div className="p-8 text-center">
-        <h2 className="text-xl font-bold text-red-600">Ошибка подключения</h2>
-        <p className="text-gray-600 mt-2">{connectionError}</p>
-        <p className="text-gray-500 mt-4">Команда уже в игре. Закройте другую вкладку и обновите страницу.</p>
+      <div className="min-h-screen flex items-center justify-center p-6">
+        <div className="max-w-md text-center">
+          <h2 className="text-xl font-bold text-red-600">Ошибка подключения</h2>
+          <p className="text-gray-600 mt-2">{connectionError}</p>
+          <p className="text-gray-500 mt-4">Команда уже в игре. Закройте другую вкладку и обновите страницу.</p>
+        </div>
       </div>
     );
   }

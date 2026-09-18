@@ -1,7 +1,7 @@
 import { logger } from '@shared/utils/logger';
 import { EngineEvent } from '../engine/events';
 import { GameEngine } from '../engine/game-engine';
-import { broadcastToGame, sendTo } from './connections';
+import { broadcastToGame, broadcastToGameAndAdmins, closeGameConnections, sendTo } from './connections';
 import { gameRepo } from '../db/repositories/game.repo';
 
 import type { FinalScores } from '../engine/types';
@@ -13,14 +13,14 @@ export function setupEngineEvents(
   const gameId = engine.getState().id;
 
   engine.on(EngineEvent.TimeSync, (payload) => {
-    broadcastToGame(gameId, {
+    broadcastToGameAndAdmins(gameId, {
       type: 'TIME_SYNC',
       payload,
     });
   });
 
   engine.on(EngineEvent.SubPhaseChanged, (payload) => {
-    broadcastToGame(gameId, {
+    broadcastToGameAndAdmins(gameId, {
       type: 'SUB_PHASE_CHANGED',
       payload,
     });
@@ -45,7 +45,7 @@ export function setupEngineEvents(
       },
     });
 
-    broadcastToGame(gameId, {
+    broadcastToGameAndAdmins(gameId, {
       type: 'LEADERBOARD_UPDATE',
       payload: engine.getLeaderboard(),
     });
@@ -83,13 +83,13 @@ export function setupEngineEvents(
   });
 
   engine.on(EngineEvent.GameStarted, (payload) => {
-    broadcastToGame(gameId, {
+    broadcastToGameAndAdmins(gameId, {
       type: 'PHASE_CHANGED',
       payload,
     });
 
     // Отправляем начальный лидерборд всем командам
-    broadcastToGame(gameId, {
+    broadcastToGameAndAdmins(gameId, {
       type: 'LEADERBOARD_UPDATE',
       payload: engine.getLeaderboard(),
     });
@@ -98,10 +98,16 @@ export function setupEngineEvents(
   engine.on(EngineEvent.GameEnded, async ({ finalScores }) => {
     logger.info(`Игра ${gameId} завершена`);
 
-    broadcastToGame(gameId, {
+    broadcastToGameAndAdmins(gameId, {
       type: 'GAME_ENDED',
       payload: { finalScores },
     });
+
+    // Закрываем соединения через 5 секунд (страховка)
+    setTimeout(() => {
+      closeGameConnections(gameId);
+      logger.info(`Соединения игры ${gameId} закрыты`);
+    }, 5000);
 
     try {
       await onEnd(gameId, finalScores);

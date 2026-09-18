@@ -7,7 +7,6 @@ import type {
   TeamPublicInfo,
   Hint,
   ClientEvent,
-  AdminStartGameEvent,
   Question,
   Answer,
   AssignedLandmark,
@@ -20,13 +19,12 @@ import type { ServerEvents } from './types';
 import { createTeamSession, type TeamSession } from './team-session';
 
 interface GameRoomParams {
-  startGameEvent: Event<unknown>;
   serverEvents: ServerEvents;
   localTeamId: string; // ID нашей команды
 }
 
 export function createGameRoom(params: GameRoomParams) {
-  const { startGameEvent, serverEvents, localTeamId } = params;
+  const { serverEvents, localTeamId } = params;
 
   // === СОБЫТИЯ КОМАНДЫ ===
   const sendMessage = createEvent<ClientEvent>(); // Отправка сообщений через сокет
@@ -190,13 +188,6 @@ export function createGameRoom(params: GameRoomParams) {
     filter: (team) => !!team,
     fn: (team, answer) => ({ team: team!, answer }),
     target: answerReceivedFx,
-  });
-
-  // Старт игры (из админки)
-  sample({
-    clock: startGameEvent,
-    fn: () => ({ type: 'ADMIN_START_GAME', payload: {} }) as AdminStartGameEvent,
-    target: sendMessage,
   });
 
   // === ЛИДЕРБОРД ===

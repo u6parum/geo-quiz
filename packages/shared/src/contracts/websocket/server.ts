@@ -3,6 +3,14 @@ import type { Hint, HintGroup } from '../landmark';
 import type { Answer, PendingQuestion, Question } from '../question';
 import type { TeamBase } from '../team';
 
+export type FatalErrorCode =
+  | 'DUPLICATE_CONNECTION'
+  | 'CONNECTION_REPLACED'
+  | 'NOT_PARTICIPANT'
+  | 'GAME_NOT_FOUND'
+  | 'UNAUTHORIZED';
+
+export type GameErrorCode = 'QUESTION_ERROR' | 'GUESS_ERROR' | 'ANSWER_ERROR' | 'PARSE_ERROR';
 export interface TeamPublicInfo extends TeamBase {
   score: number;
 }
@@ -107,7 +115,10 @@ export type LandmarkApprovedEvent = {
 
 export type ErrorEvent = {
   type: 'ERROR';
-  payload: { message: string; code: string };
+  payload: {
+    message: string;
+    code: GameErrorCode | FatalErrorCode;
+  };
 };
 
 export type LeaderboardUpdateEvent = {
