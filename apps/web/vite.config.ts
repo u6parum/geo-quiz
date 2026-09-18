@@ -19,6 +19,7 @@ export default defineConfig(({ mode }) => {
         '@features': resolve(__dirname, './src/features'),
         '@ui': resolve(__dirname, './src/shared/ui'),
         '@api': resolve(__dirname, './src/shared/api'),
+        '@utils': resolve(__dirname, './src/shared/utils'),
       },
     },
     server: {

@@ -1,5 +1,5 @@
 import { createEvent, createStore, sample } from 'effector';
-import type { Hint, Guess, ClientEvent, SubmitGuessEvent } from '@shared';
+import type { Hint, Guess, ClientEvent, SubmitGuessEvent } from '@shared/contracts';
 
 interface GuessingConfig {
   hints: Hint[];

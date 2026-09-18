@@ -1,5 +1,5 @@
 import { WebSocket } from 'ws';
-import type { ServerEvent } from '@shared';
+import type { ServerEvent } from '@shared/contracts';
 
 import { socketMessage } from './utils';
 

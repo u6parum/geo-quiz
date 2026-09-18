@@ -1,7 +1,7 @@
 import { AppError } from '../middleware/error-handler';
 import { prisma } from '../db/prisma';
 import { teamApplicationRepo } from '../db/repositories/team-application.repo';
-import { Hint, HintGroup } from '@shared';
+import type { Hint, HintGroup } from '@shared/contracts';
 
 export const teamApplicationService = {
   async submitApplication(data: {

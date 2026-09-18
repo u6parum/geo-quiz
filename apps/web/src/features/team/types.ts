@@ -1,4 +1,5 @@
-export type GameStatus = 'LOBBY' | 'MODERATION' | 'ACTIVE' | 'FINISHED';
+import type { GamePhase } from '@shared/contracts';
+
 export type JoinRequestStatus = 'PENDING' | 'APPROVED' | 'REJECTED';
 
 export interface TeamWithLandmark {
@@ -11,7 +12,7 @@ export interface TeamWithLandmark {
 
 export interface TeamGame {
   id: string;
-  status: GameStatus;
+  status: GamePhase;
   startedAt: string | null;
   finishedAt: string | null;
 }
@@ -53,4 +54,13 @@ export interface TeamMemberInfo {
   fullName: string;
   email: string;
   isCaptain: boolean;
+}
+
+export interface MyGame {
+  id: string;
+  status: GamePhase;
+  startedAt: string | null;
+  finishedAt: string | null;
+  teamId: string;
+  teamName: string;
 }

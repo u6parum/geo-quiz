@@ -2,9 +2,9 @@ import { useState } from 'react';
 import type { Store } from 'effector';
 import { useUnit } from 'effector-react';
 
-import type { Guess, Hint } from '@shared';
+import type { Guess, Hint } from '@shared/contracts';
 
-import { Card, Button, Input, Badge } from '../../shared/ui';
+import { Card, Button, Input, Badge } from '@ui';
 
 interface TeamPanelProps {
   teamId: string;

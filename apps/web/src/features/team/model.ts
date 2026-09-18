@@ -1,7 +1,9 @@
-import { createEffect, createEvent, createStore, sample } from 'effector';
+import { combine, createEffect, createEvent, createStore, sample } from 'effector';
 import { not } from 'patronum';
 import { teamApi } from './api';
-import type { MyTeam, TeamJoinRequest, TeamMemberInfo, TeamPublic, TeamWithLandmark } from './types';
+import type { MyGame, MyTeam, TeamJoinRequest, TeamMemberInfo, TeamPublic, TeamWithLandmark } from './types';
+import { createGate } from 'effector-react';
+import { stringSorter } from '@utils/sorters';
 
 // ============ Команды с достопримечательностями ============
 export const $teams = createStore<TeamWithLandmark[]>([]);
@@ -208,4 +210,35 @@ sample({
   clock: loadTeamById,
   filter: not(loadTeamByIdFx.pending),
   target: loadTeamByIdFx,
+});
+
+export const MyGamesGate = createGate('MyGamesGate');
+
+// При открытии MyGames и срабатывании гейта, загружаем $myTeams, если они пустые
+sample({
+  clock: MyGamesGate.open,
+  source: $myTeams,
+  filter: (teams) => teams.length === 0,
+  target: loadMyTeamsFx,
+});
+
+// Собираем все игры пользователя из его команд
+export const $myGames = combine($myTeams, (teams) => {
+  const games: MyGame[] = [];
+
+  teams.forEach((team) => {
+    team.games.forEach((game) => {
+      games.push({
+        id: game.id,
+        status: game.status,
+        startedAt: game.startedAt,
+        finishedAt: game.finishedAt,
+        teamId: team.id,
+        teamName: team.name,
+      });
+    });
+  });
+
+  // Сортируем по дате старта (свежие сверху)
+  return games.sort(stringSorter('startedAt'));
 });

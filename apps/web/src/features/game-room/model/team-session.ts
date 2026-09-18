@@ -10,7 +10,7 @@ import type {
   PendingQuestion,
   OutgoingQuestion,
   TeamBase,
-} from '@shared';
+} from '@shared/contracts';
 import type { GuessingSession } from './guessing-session';
 import { createGuessingSession } from './guessing-session';
 

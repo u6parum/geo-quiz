@@ -1,12 +1,12 @@
 import jwt from 'jsonwebtoken';
 import type { WebSocketServer, WebSocket } from 'ws';
-import type { ClientEvent, JoinGameEvent } from '@shared';
+import type { ClientEvent, JoinGameEvent } from '@shared/contracts';
 import { logger } from '@shared/utils/logger';
 import { gameManager } from '../services/game-manager';
+import { gameRepo } from '../db/repositories/game.repo';
 import { addConnection, removeConnection, sendTo } from './connections';
 import { getTokenFromCookie, socketMessage } from './utils';
 import { JwtPayload } from './types';
-import { gameRepo } from '../db/repositories/game.repo';
 
 export function setupWebSocket(wss: WebSocketServer, jwtSecret: string) {
   wss.on('connection', (ws: WebSocket, req) => {

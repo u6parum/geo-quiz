@@ -2,9 +2,9 @@ import type { Store } from 'effector';
 import { useUnit } from 'effector-react';
 import { useState } from 'react';
 
-import type { Answer, Question, OutgoingQuestion, TeamBase } from '@shared';
+import type { Answer, Question, OutgoingQuestion, TeamBase } from '@shared/contracts';
 
-import { Card, Button, Input, Badge } from '../../shared/ui';
+import { Card, Button, Input, Badge } from '@ui';
 
 interface QuestionPanelProps {
   $incomingQuestions: Store<Question[]>;

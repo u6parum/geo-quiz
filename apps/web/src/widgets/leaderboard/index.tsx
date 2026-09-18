@@ -1,7 +1,7 @@
 import type { Store } from 'effector';
 import { useUnit } from 'effector-react';
 
-import type { LeaderboardEntry } from '@shared';
+import type { LeaderboardEntry } from '@shared/contracts';
 
 interface LeaderboardProps {
   $leaderboard: Store<LeaderboardEntry[]>;

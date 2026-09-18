@@ -14,7 +14,7 @@ import type {
   GameStatePayload,
   RestoredGuess,
   PendingQuestion,
-} from '@shared';
+} from '@shared/contracts';
 
 import type { ServerEvents } from './types';
 import { createTeamSession, type TeamSession } from './team-session';

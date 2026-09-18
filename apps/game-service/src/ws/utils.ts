@@ -1,4 +1,4 @@
-import type { ServerEvent } from '@shared';
+import type { ServerEvent } from '@shared/contracts';
 
 export function getTokenFromCookie(cookieHeader?: string): string | null {
   if (!cookieHeader) {

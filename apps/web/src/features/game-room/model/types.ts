@@ -18,7 +18,7 @@ import type {
   QuestionHistoryRestoreEvent,
   QuestionCountersResetEvent,
   TeamJoinedEvent,
-} from '@shared';
+} from '@shared/contracts';
 
 type Payload<T extends ServerEvent> = T['payload'];
 

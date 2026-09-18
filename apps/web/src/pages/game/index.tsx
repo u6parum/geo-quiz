@@ -10,7 +10,7 @@ import { TeamPanel } from '@widgets/team-panel';
 import { QuestionPanel } from '@widgets/question-panel';
 import { Leaderboard } from '@widgets/leaderboard';
 
-import { Badge, Button, Card } from '../../shared/ui';
+import { Badge, Button, Card } from '@ui';
 
 export const GamePage: React.FC = () => {
   const { gameId = '' } = useParams<{ gameId: string }>();
