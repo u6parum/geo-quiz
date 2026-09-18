@@ -212,15 +212,7 @@ sample({
   target: loadTeamByIdFx,
 });
 
-export const MyGamesGate = createGate('MyGamesGate');
-
-// При открытии MyGames и срабатывании гейта, загружаем $myTeams, если они пустые
-sample({
-  clock: MyGamesGate.open,
-  source: $myTeams,
-  filter: (teams) => teams.length === 0,
-  target: loadMyTeamsFx,
-});
+export const MyGamesGate = createGate();
 
 // Собираем все игры пользователя из его команд
 export const $myGames = combine($myTeams, (teams) => {
@@ -249,18 +241,7 @@ const { tick: myGamesPollingTick } = interval({
   stop: MyGamesGate.close,
 });
 
-// На каждый тик — перезагружаем команды, если они есть
 sample({
-  clock: myGamesPollingTick,
-  source: $myTeams,
-  filter: (teams) => teams.length > 0,
-  target: loadMyTeamsFx,
-});
-
-// При открытии Gate — загружаем команды, если стор пуст
-sample({
-  clock: MyGamesGate.open,
-  source: $myTeams,
-  filter: (teams) => teams.length === 0,
-  target: loadMyTeamsFx,
+  clock: [MyGamesGate.open, myGamesPollingTick],
+  target: loadMyTeams,
 });

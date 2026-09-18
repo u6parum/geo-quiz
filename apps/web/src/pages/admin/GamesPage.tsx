@@ -1,7 +1,6 @@
-import { useEffect } from 'react';
-import { useUnit } from 'effector-react';
+import { useGate, useUnit } from 'effector-react';
 import { useNavigate } from 'react-router-dom';
-import { $games, $gamesLoading, loadGames, startGame } from '@features/game';
+import { $games, $gamesLoading, AdminGamesGate, startGame } from '@features/game';
 import { Badge, Button, Card } from '@ui';
 
 import type { GameStatus } from '@features/game';
@@ -27,13 +26,11 @@ function formatDuration(seconds: number): string {
 }
 
 export const AdminGamesPage = () => {
-  const games = useUnit($games);
-  const isLoading = useUnit($gamesLoading);
-  const navigate = useNavigate();
+  useGate(AdminGamesGate);
 
-  useEffect(() => {
-    loadGames();
-  }, []);
+  const { games, isLoading } = useUnit({ games: $games, isLoading: $gamesLoading });
+
+  const navigate = useNavigate();
 
   return (
     <div className="min-h-screen  p-6">
