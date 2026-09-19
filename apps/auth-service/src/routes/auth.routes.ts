@@ -5,82 +5,116 @@ import { authMiddleware } from '../middleware/auth.middleware';
 
 export const authRouter = Router();
 
-// Регистрация
+// ==================
+// РЕГИСТРАЦИЯ
+// ==================
 authRouter.post('/register', async (req, res) => {
   try {
-    const { email, password, fullName, phone } = req.body;
+    const { email, fullName, phone, password } = req.body;
 
-    if (!email || !password || !fullName) {
-      return res.status(400).json({
-        message: 'Email, пароль и имя обязательны',
-        code: 'VALIDATION_ERROR',
-      });
+    if (!email || !fullName || !phone || !password) {
+      return res.status(400).json({ message: 'Все поля обязательны' });
     }
 
-    if (typeof email !== 'string' || !email.includes('@')) {
-      return res.status(400).json({
-        message: 'Некорректный email',
-        code: 'VALIDATION_ERROR',
-      });
+    if (!email.includes('@')) {
+      return res.status(400).json({ message: 'Некорректный email' });
     }
 
     if (password.length < 6) {
-      return res.status(400).json({
-        message: 'Пароль должен быть не менее 6 символов',
-        code: 'VALIDATION_ERROR',
-      });
+      return res.status(400).json({ message: 'Пароль минимум 6 символов' });
     }
 
-    const result = await authService.register({ email, password, fullName, phone });
+    const { user, accessToken, refreshToken } = await authService.register({
+      email,
+      fullName,
+      phone,
+      password,
+    });
 
-    authService.setAuthCookie(res, result.token);
+    authService.setRefreshCookie(res, refreshToken);
 
-    res.status(201).json(result);
+    res.status(201).json({
+      user: authService.toPublicUser(user),
+      accessToken,
+    });
   } catch (error: any) {
     const status = error.message.includes('уже существует') ? 409 : 400;
     res.status(status).json({ message: error.message });
   }
 });
 
-// Вход
+// ==================
+// ЛОГИН
+// ==================
 authRouter.post('/login', async (req, res) => {
   try {
     const { email, password } = req.body;
 
     if (!email || !password) {
-      return res.status(400).json({
-        message: 'Email и пароль обязательны',
-        code: 'VALIDATION_ERROR',
-      });
+      return res.status(400).json({ message: 'Email и пароль обязательны' });
     }
 
-    const result = await authService.login(email, password);
+    const { user, accessToken, refreshToken } = await authService.login(email, password);
 
-    authService.setAuthCookie(res, result.token);
+    authService.setRefreshCookie(res, refreshToken);
 
-    res.json(result);
+    res.json({
+      user: authService.toPublicUser(user),
+      accessToken,
+    });
   } catch (error: any) {
     res.status(401).json({ message: error.message });
   }
 });
 
-// Логаут
-authRouter.post('/logout', (_req, res) => {
+// ==================
+// ОБНОВЛЕНИЕ ACCESS-ТОКЕНА
+// ==================
+authRouter.post('/refresh', async (req, res) => {
   try {
-    authService.clearAuthCookie(res);
-    res.status(200).json({});
+    const refreshToken = authService.getRefreshTokenFromCookie(req.headers.cookie);
+
+    if (!refreshToken) {
+      return res.status(401).json({ message: 'Refresh-токен отсутствует' });
+    }
+
+    const { user, accessToken, refreshToken: newRefreshToken } = await authService.refresh(refreshToken);
+
+    authService.setRefreshCookie(res, newRefreshToken);
+
+    res.json({
+      user: authService.toPublicUser(user),
+      accessToken,
+    });
   } catch (error: any) {
+    authService.clearRefreshCookie(res);
     res.status(401).json({ message: error.message });
   }
 });
 
-// Получить текущего пользователя
+// ==================
+// ВЫХОД
+// ==================
+authRouter.post('/logout', async (req, res) => {
+  const refreshToken = authService.getRefreshTokenFromCookie(req.headers.cookie);
+
+  if (refreshToken) {
+    await authService.revokeRefreshToken(refreshToken);
+  }
+
+  authService.clearRefreshCookie(res);
+  res.json({ success: true });
+});
+
+// ==================
+// ТЕКУЩИЙ ПОЛЬЗОВАТЕЛЬ
+// ==================
 authRouter.get('/me', authMiddleware, async (req, res) => {
   const user = await userRepo.findById(req.user!.id);
 
   if (!user) {
-    return res.status(404).json({ message: 'Пользователь не найден' });
+    return res.status(401).json({ message: 'Пользователь не найден' });
   }
 
-  res.json(authService.toPublicUser(user));
+  res.json({ user: authService.toPublicUser(user) });
 });

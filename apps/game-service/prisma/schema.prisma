@@ -5,7 +5,6 @@ generator client {
 
 datasource db {
   provider = "postgresql"
-  schemas  = ["game"]
 }
 
 // ==================
@@ -26,7 +25,6 @@ model Team {
   updatedAt DateTime @updatedAt
 
   @@map("teams")
-  @@schema("game")
 }
 
 model TeamMember {
@@ -37,7 +35,6 @@ model TeamMember {
 
   @@unique([teamId, userId])
   @@map("team_members")
-  @@schema("game")
 }
 
 model TeamApplication {
@@ -55,15 +52,12 @@ model TeamApplication {
   updatedAt DateTime @updatedAt
 
   @@map("team_applications")
-  @@schema("game")
 }
 
 enum ApplicationStatus {
   PENDING
   APPROVED
   REJECTED
-
-  @@schema("game")
 }
 
 model TeamJoinRequest {
@@ -78,15 +72,12 @@ model TeamJoinRequest {
 
   @@unique([teamId, userId])
   @@map("team_join_requests")
-  @@schema("game")
 }
 
 enum JoinRequestStatus {
   PENDING
   APPROVED
   REJECTED
-
-  @@schema("game")
 }
 
 // ==================
@@ -103,15 +94,12 @@ model Landmark {
   status      LandmarkStatus @default(PENDING)
 
   @@map("landmarks")
-  @@schema("game")
 }
 
 enum LandmarkStatus {
   PENDING
   APPROVED
   REJECTED
-
-  @@schema("game")
 }
 
 // ==================
@@ -135,7 +123,6 @@ model Game {
   finishedAt DateTime?
 
   @@map("games")
-  @@schema("game")
 }
 
 enum GameStatus {
@@ -143,8 +130,6 @@ enum GameStatus {
   MODERATION
   ACTIVE
   FINISHED
-
-  @@schema("game")
 }
 
 model GameTeam {
@@ -157,7 +142,6 @@ model GameTeam {
 
   @@unique([gameId, teamId])
   @@map("game_teams")
-  @@schema("game")
 }
 
 // ==================
@@ -176,7 +160,6 @@ model Question {
   answer     Answer?
 
   @@map("questions")
-  @@schema("game")
 }
 
 model Answer {
@@ -188,7 +171,6 @@ model Answer {
   answeredAt Int
 
   @@map("answers")
-  @@schema("game")
 }
 
 // ==================
@@ -207,7 +189,6 @@ model Guess {
   elapsedAt    Int
 
   @@map("guesses")
-  @@schema("game")
 }
 
 // ==================
@@ -222,5 +203,4 @@ model GameSnapshot {
   updatedAt DateTime @updatedAt
 
   @@map("game_snapshots")
-  @@schema("game")
 }

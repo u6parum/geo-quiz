@@ -1,8 +1,7 @@
-import { Request, Response, NextFunction } from 'express';
+import type { Request, Response, NextFunction } from 'express';
 import jwt from 'jsonwebtoken';
 
 const JWT_SECRET = process.env.JWT_SECRET || 'dev-secret-key-change-in-production';
-const COOKIE_NAME = 'auth_token';
 
 declare global {
   namespace Express {
@@ -17,20 +16,28 @@ declare global {
 }
 
 export function authMiddleware(req: Request, res: Response, next: NextFunction) {
-  const token = getTokenFromCookie(req.headers.cookie);
+  const authHeader = req.headers.authorization;
 
-  if (!token) {
+  if (!authHeader || !authHeader.startsWith('Bearer ')) {
     return res.status(401).json({ message: 'Требуется авторизация' });
   }
 
+  const token = authHeader.slice(7);
+
   try {
-    const payload = jwt.verify(token, JWT_SECRET) as { id: string; email: string; role: string };
+    const payload = jwt.verify(token, JWT_SECRET) as {
+      id: string;
+      email: string;
+      role: string;
+    };
+
     req.user = payload;
     next();
   } catch {
     return res.status(401).json({ message: 'Неверный или истёкший токен' });
   }
 }
+
 export function adminMiddleware(req: Request, res: Response, next: NextFunction) {
   if (!req.user) {
     return res.status(401).json({ message: 'Требуется авторизация' });
@@ -41,16 +48,4 @@ export function adminMiddleware(req: Request, res: Response, next: NextFunction)
   }
 
   next();
-}
-
-function getTokenFromCookie(cookieHeader?: string): string | null {
-  if (!cookieHeader) return null;
-
-  const cookies = cookieHeader.split(';').reduce<Record<string, string>>((acc, item) => {
-    const [key, value] = item.trim().split('=');
-    acc[key] = value;
-    return acc;
-  }, {});
-
-  return cookies[COOKIE_NAME] || null;
 }

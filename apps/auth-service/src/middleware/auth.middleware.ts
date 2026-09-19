@@ -15,24 +15,14 @@ declare global {
 }
 
 export function authMiddleware(req: Request, res: Response, next: NextFunction) {
-  // 1. Пытаемся достать токен из httpOnly cookie
-  const tokenFromCookie = authService.getTokenFromCookie(req.headers.cookie);
-
-  // 2. Если куки нет — пробуем заголовок Authorization (запасной вариант)
   const authHeader = req.headers.authorization;
-  let token: string | null = null;
 
-  if (tokenFromCookie) {
-    token = tokenFromCookie;
-  } else if (authHeader && authHeader.startsWith('Bearer ')) {
-    token = authHeader.slice(7);
-  }
-
-  if (!token) {
+  if (!authHeader || !authHeader.startsWith('Bearer ')) {
     return res.status(401).json({ message: 'Требуется авторизация' });
   }
 
-  const payload = authService.verifyToken(token);
+  const token = authHeader.slice(7);
+  const payload = authService.verifyAccessToken(token);
 
   if (!payload) {
     return res.status(401).json({ message: 'Неверный или истёкший токен' });

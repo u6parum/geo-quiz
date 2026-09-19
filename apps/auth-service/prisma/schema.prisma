@@ -11,28 +11,36 @@ generator client {
 
 datasource db {
   provider = "postgresql"
-  schemas  = ["auth"]
   // url      = env("DATABASE_URL")
 }
 
+model RefreshToken {
+  id        String    @id @default(uuid())
+  token     String    @unique
+  userId    String
+  expiresAt DateTime
+  createdAt DateTime  @default(now())
+  revokedAt DateTime?
+
+  @@index([userId])
+  @@map("refresh_tokens")
+}
+
 model User {
-  id       String  @id @default(uuid())
-  email    String  @unique
+  id       String @id @default(uuid())
+  email    String @unique
   password String
   fullName String
   phone    String
-  role     Role    @default(USER)
+  role     Role   @default(USER)
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
   @@map("users")
-  @@schema("auth")
 }
 
 enum Role {
   USER
   ADMIN
-
-  @@schema("auth")
 }

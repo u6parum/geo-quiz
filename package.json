@@ -11,7 +11,9 @@
     "dev:web": "nx run web:dev",
     "build": "nx run-many --target=build --all",
     "test": "nx run-many --target=test --all",
-    "db:studio": "pnpm --filter game-service exec prisma studio --port 5555"
+    "db:studio:game": "pnpm --filter game-service exec prisma studio --port 5555",
+    "db:studio:auth": "pnpm --filter auth-service exec prisma studio --port 5556",
+    "db:studio": "concurrently -n auth,game -c blue,green \"pnpm db:studio:auth\" \"pnpm db:studio:game\""
   },
   "keywords": [],
   "author": "",

@@ -10,6 +10,34 @@ import { JwtPayload } from './types';
 
 export function setupWebSocket(wss: WebSocketServer, jwtSecret: string) {
   wss.on('connection', (ws: WebSocket, req) => {
+    // Извлекаем токен из query-параметра
+    const url = new URL(req.url || '', `http://${req.headers.host}`);
+    const token = url.searchParams.get('token');
+
+    if (!token) {
+      ws.send(
+        socketMessage({
+          type: 'ERROR',
+          payload: { message: 'Требуется авторизация', code: 'UNAUTHORIZED' },
+        }),
+      );
+      return ws.close(4001, 'Unauthorized');
+    }
+
+    let user: JwtPayload;
+
+    try {
+      user = jwt.verify(token, jwtSecret) as JwtPayload;
+    } catch {
+      ws.send(
+        socketMessage({
+          type: 'ERROR',
+          payload: { message: 'Неверный токен', code: 'UNAUTHORIZED' },
+        }),
+      );
+      return ws.close(4001, 'Invalid token');
+    }
+
     let currentTeamId: string | null = null;
     let currentGameId: string | null = null;
 
@@ -24,35 +52,6 @@ export function setupWebSocket(wss: WebSocketServer, jwtSecret: string) {
         switch (message.type) {
           case 'JOIN_GAME': {
             const { gameId, teamId } = message.payload as JoinGameEvent['payload'];
-
-            // === АУТЕНТИФИКАЦИЯ ===
-            const token = getTokenFromCookie(req.headers.cookie);
-
-            if (!token) {
-              ws.send(
-                socketMessage({
-                  type: 'ERROR',
-                  payload: { message: 'Требуется авторизация', code: 'UNAUTHORIZED' },
-                }),
-              );
-
-              return ws.close(4001, 'Unauthorized');
-            }
-
-            let user: JwtPayload;
-
-            try {
-              user = jwt.verify(token, jwtSecret) as JwtPayload;
-            } catch {
-              ws.send(
-                socketMessage({
-                  type: 'ERROR',
-                  payload: { message: 'Неверный токен', code: 'UNAUTHORIZED' },
-                }),
-              );
-
-              return ws.close(4001, 'Invalid token');
-            }
 
             const game = await gameRepo.findById(gameId);
 
