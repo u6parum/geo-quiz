@@ -93,6 +93,29 @@ authRouter.post('/refresh', async (req, res) => {
 });
 
 // ==================
+// ПОЛУЧЕНИЕ СЕССИИ
+// ==================
+authRouter.get('/session', async (req, res) => {
+  try {
+    const refreshToken = authService.getRefreshTokenFromCookie(req.headers.cookie);
+
+    if (!refreshToken) {
+      return res.status(401).json({ message: 'Нет сессии' });
+    }
+
+    const { user, accessToken } = await authService.getSession(refreshToken);
+
+    res.json({
+      user: authService.toPublicUser(user),
+      accessToken,
+    });
+  } catch (error: any) {
+    authService.clearRefreshCookie(res);
+    res.status(401).json({ message: error.message });
+  }
+});
+
+// ==================
 // ВЫХОД
 // ==================
 authRouter.post('/logout', async (req, res) => {

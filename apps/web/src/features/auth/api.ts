@@ -8,6 +8,11 @@ export interface AuthUser {
   role: 'USER' | 'ADMIN';
 }
 
+export interface AuthResponse {
+  user: AuthUser;
+  accessToken: string;
+}
+
 export interface RegisterPayload {
   email: string;
   fullName: string;
@@ -21,26 +26,32 @@ export interface LoginPayload {
 }
 
 export const authApi = {
-  async register(payload: RegisterPayload): Promise<AuthUser> {
-    const response = await http<{ user: AuthUser }>('/auth/register', {
+  async register(payload: RegisterPayload): Promise<AuthResponse> {
+    return await http<AuthResponse>('/auth/register', {
       method: 'POST',
       body: JSON.stringify(payload),
     });
-
-    return response.user;
   },
 
-  async login(payload: LoginPayload): Promise<AuthUser> {
-    const response = await http<{ user: AuthUser }>('/auth/login', {
+  async login(payload: LoginPayload): Promise<AuthResponse> {
+    return await http<AuthResponse>('/auth/login', {
       method: 'POST',
       body: JSON.stringify(payload),
     });
-
-    return response.user;
   },
 
-  async me(): Promise<AuthUser> {
-    return await http<AuthUser>('/auth/me');
+  async refresh(): Promise<AuthResponse> {
+    return http<AuthResponse>('/auth/refresh', {
+      method: 'POST',
+    });
+  },
+
+  async session(): Promise<AuthResponse> {
+    return http<AuthResponse>('/auth/session');
+  },
+
+  async me(): Promise<{ user: AuthUser }> {
+    return await http<{ user: AuthUser }>('/auth/me');
   },
 
   async logout(): Promise<void> {

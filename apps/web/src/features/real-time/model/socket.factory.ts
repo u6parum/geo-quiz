@@ -18,12 +18,12 @@ import type {
   QuestionHistoryRestoreEvent,
   QuestionCountersResetEvent,
   TeamJoinedEvent,
-  FatalErrorCode,
-  GameErrorCode,
 } from '@shared/contracts/websocket/server';
 import type { ClientEvent } from '@shared/contracts/websocket/client';
 import { isFatalError, serializeEvent } from './helpers';
 import type { SocketConfig } from './types';
+import { $accessToken } from '@api/access-token';
+import { tryRefresh } from '@api/refresh';
 
 const DEFAULT_PING_INTERVAL_MS = 5000;
 const DEFAULT_RECONNECT_DELAY_MS = 2000;
@@ -80,37 +80,49 @@ export const createSocketConnection = (config: SocketConfig) => {
   /* */
 
   // === ЛОГИКА ПОДКЛЮЧЕНИЯ ===
-  const connectFx = createEffect((): Promise<WebSocket> => {
-    return new Promise((resolve, reject) => {
-      try {
-        const ws = new WebSocket(url);
-
-        ws.onopen = () => {
-          // После подключения отправляем JOIN_GAME
-          ws.send(
-            serializeEvent({
-              type: 'JOIN_GAME',
-              payload: { gameId, teamId },
-            }),
-          );
-
-          resolve(ws);
-        };
-
-        ws.onmessage = (event) => {
-          rawMessageReceived(JSON.parse(event.data) as ServerEvent);
-        };
-
-        ws.onerror = (error) => {
-          console.error('WebSocket error:', error);
-          reject(error);
-        };
-
-        ws.onclose = () => socketClose();
-      } catch (error) {
-        reject(error);
+  const connectFx = attach({
+    source: $accessToken,
+    effect: async (token): Promise<WebSocket> => {
+      if (!token) {
+        token = await tryRefresh();
       }
-    });
+
+      if (!token) {
+        throw new Error('Нет access-токена');
+      }
+
+      return new Promise((resolve, reject) => {
+        try {
+          const wsUrl = `${url}${url.includes('?') ? '&' : '?'}token=${token}`;
+          const ws = new WebSocket(wsUrl);
+
+          ws.onopen = () => {
+            // После подключения отправляем JOIN_GAME
+            ws.send(
+              serializeEvent({
+                type: 'JOIN_GAME',
+                payload: { gameId, teamId },
+              }),
+            );
+
+            resolve(ws);
+          };
+
+          ws.onmessage = (event) => {
+            rawMessageReceived(JSON.parse(event.data) as ServerEvent);
+          };
+
+          ws.onerror = (error) => {
+            console.error('WebSocket error:', error);
+            reject(error);
+          };
+
+          ws.onclose = () => socketClose();
+        } catch (error) {
+          reject(error);
+        }
+      });
+    },
   });
 
   // === PING ДЛЯ СИНХРОНИЗАЦИИ ВРЕМЕНИ ===
