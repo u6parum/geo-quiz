@@ -1,4 +1,4 @@
-# Синхронизация времени между клиентом и сервером
+# Синхронизация времени
 
 ```
 Клиент                            Сервер
@@ -26,19 +26,4 @@ pingInterval (setInterval каждые 5с)
 
 # Архитектура сервера
 
-```
-apps/mock-server/src/
-├── index.ts              # Точка входа, WebSocket-сервер
-├── game-engine.ts        # Ядро игры: фазы, таймер, очки
-├── types.ts              # Серверные типы
-├── handlers/
-│   ├── join-handler.ts       # Обработка JOIN_GAME
-│   ├── guess-handler.ts      # Обработка SUBMIT_GUESS
-│   ├── question-handler.ts   # Обработка ASK_QUESTION + ANSWER_QUESTION
-│   ├── admin-handler.ts      # Админские команды (startGame, approveLandmark)
-│   └── landmark-handler.ts   # SUBMIT_LANDMARK + модерация
-└── utils/
-    ├── scoring.ts        # Функция calculateScore
-    ├── validation.ts     # Валидация ответов
-    └── logger.ts         # Логирование
 ```
