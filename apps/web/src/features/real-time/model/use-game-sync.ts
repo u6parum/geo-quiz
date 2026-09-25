@@ -3,7 +3,7 @@ import { createEffect, sample, type EventCallable } from 'effector';
 
 import type { ClientEvent } from '@shared/contracts/websocket/client';
 
-import { createGameRoom } from '../../game-room';
+import { createGameRoom, createGameNotifications } from '../../game-room';
 import { createSocketConnection } from './socket.factory';
 import { mapEventsToSocket } from './socket-events-mapper';
 import { buildSocketUrl } from './helpers';
@@ -30,6 +30,9 @@ function createGameSync(params: UseGameSyncParams) {
     serverEvents,
     localTeamId: teamId,
   });
+
+  // Всплывающие уведомления игроку об игровых событиях
+  createGameNotifications({ serverEvents });
 
   sample({
     clock: room.sendMessage,
