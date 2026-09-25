@@ -82,10 +82,12 @@ export function setupEngineEvents(
     }
   });
 
-  engine.on(EngineEvent.GameStarted, (payload) => {
+  engine.on(EngineEvent.GameStarted, () => {
+    const { phase, elapsedSeconds } = engine.getState();
+
     broadcastToGameAndAdmins(gameId, {
       type: 'PHASE_CHANGED',
-      payload,
+      payload: { phase, elapsedSeconds },
     });
 
     // Отправляем начальный лидерборд всем командам
