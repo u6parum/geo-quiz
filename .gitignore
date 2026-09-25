@@ -1,4 +1,5 @@
-apps/*/src/db/generated/
-node_modules
+**/generated
+**/node_modules
 .nx
+.claudeignore
 senior
