@@ -1,4 +1,4 @@
-import { sample, createStore, createEvent, createEffect, type Event } from 'effector';
+import { sample, createStore, createEvent, createEffect } from 'effector';
 
 import type {
   GamePhase,
@@ -13,6 +13,7 @@ import type {
   GameStatePayload,
   RestoredGuess,
   PendingQuestion,
+  ScoreBreakdown,
 } from '@shared/contracts';
 
 import type { ServerEvents } from './types';
@@ -138,16 +139,18 @@ export function createGameRoom(params: GameRoomParams) {
       targetTeamId,
       isCorrect,
       earnedScore,
+      breakdown,
     }: {
       team: TeamSession;
       targetTeamId: string;
       isCorrect: boolean;
       earnedScore: number;
+      breakdown: ScoreBreakdown | null;
     }) => {
       const session = team.getGuessingSession(targetTeamId);
 
       if (session && isCorrect) {
-        session.markCompleted(earnedScore);
+        session.markCompleted({ earnedScore, breakdown });
       }
     },
   );
@@ -246,7 +249,7 @@ export function createGameRoom(params: GameRoomParams) {
 
         // Если угадано — отмечаем
         if (guess.isCorrect) {
-          session.markCompleted(guess.earnedScore);
+          session.markCompleted({ earnedScore: guess.earnedScore, breakdown: guess.breakdown });
         }
       }
     });

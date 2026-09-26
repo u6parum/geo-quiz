@@ -18,19 +18,16 @@ export const GamePage: React.FC = () => {
 
   const { room, socket } = useGameSync({ teamId, gameId });
 
-  const [config, phase, subPhase, elapsed, currentTeam, teams, leaderboard, connectionError, isConnected, fatalError] =
-    useUnit([
-      room.$config,
-      room.$phase,
-      room.$subPhase,
-      room.$elapsedSeconds,
-      room.$currentTeam,
-      room.$teams,
-      room.$leaderboard,
-      room.$connectionError,
-      socket.$isConnected,
-      socket.$fatalError,
-    ]);
+  const [config, phase, subPhase, currentTeam, leaderboard, connectionError, isConnected, fatalError] = useUnit([
+    room.$config,
+    room.$phase,
+    room.$subPhase,
+    room.$currentTeam,
+    room.$leaderboard,
+    room.$connectionError,
+    socket.$isConnected,
+    socket.$fatalError,
+  ]);
 
   const navigate = useNavigate();
 
@@ -198,6 +195,7 @@ export const GamePage: React.FC = () => {
                 $revealedHints={session.$revealedHints}
                 $isCompleted={session.$isCompleted}
                 $earnedScore={session.$earnedScore}
+                $scoreBreakdown={session.$scoreBreakdown}
                 $guessHistory={session.$guessHistory}
                 submitGuess={session.submitGuess}
               />

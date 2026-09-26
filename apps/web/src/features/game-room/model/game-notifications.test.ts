@@ -96,7 +96,7 @@ describe('уведомления об игровых событиях', () => {
 
   it('результат догадки: верно и неверно', () => {
     const events = setup();
-    const base = { targetTeamId: 'b', elapsedSeconds: 10, teamScore: 0 };
+    const base = { targetTeamId: 'b', elapsedSeconds: 10, teamScore: 0, breakdown: null };
 
     events.guessResultReceived({ ...base, isCorrect: true, earnedScore: 80 });
     events.guessResultReceived({ ...base, isCorrect: false, earnedScore: 0 });
@@ -136,6 +136,7 @@ describe('уведомления об игровых событиях', () => {
       earnedScore: 0,
       elapsedSeconds: 1,
       teamScore: 0,
+      breakdown: null,
     });
 
     expect(toasts()).toEqual([{ type: 'warning', text: 'Неверно. Загадка команды «другой команды»' }]);

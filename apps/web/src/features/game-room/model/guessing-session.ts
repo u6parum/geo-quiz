@@ -1,5 +1,5 @@
 import { createEvent, createStore, sample } from 'effector';
-import type { Hint, Guess, ClientEvent, SubmitGuessEvent } from '@shared/contracts';
+import type { Hint, Guess, ClientEvent, ScoreBreakdown, SubmitGuessEvent } from '@shared/contracts';
 
 interface GuessingConfig {
   hints: Hint[];
@@ -14,11 +14,12 @@ export const createGuessingSession = (targetTeamId: string, targetTeamName: stri
   // === СОБЫТИЯ ===
   const addHint = createEvent<Hint>(); // Добавить подсказку
   const submitGuess = createEvent<string>(); // Запускается при попытке догадки
-  const markCompleted = createEvent<number>(); // Дан правильный ответ
+  const markCompleted = createEvent<{ earnedScore: number; breakdown: ScoreBreakdown | null }>(); // Дан правильный ответ
   const addFailedAttempt = createEvent<string>();
 
   // === СТОРЫ ===
   const $earnedScore = createStore(0);
+  const $scoreBreakdown = createStore<ScoreBreakdown | null>(null);
   const $revealedHints = createStore<Hint[]>([]);
   const $guessHistory = createStore<Guess[]>([]);
   const $isCompleted = createStore(false).on(markCompleted, () => true);
@@ -59,7 +60,15 @@ export const createGuessingSession = (targetTeamId: string, targetTeamName: stri
   /* Если запустили markCompleted - значит был дан правильный ответ */
   sample({
     clock: markCompleted,
+    fn: ({ earnedScore }) => earnedScore,
     target: $earnedScore,
+  });
+
+  /* Разбор начисления очков: за скорость и за потраченные вопросы */
+  sample({
+    clock: markCompleted,
+    fn: ({ breakdown }) => breakdown,
+    target: $scoreBreakdown,
   });
 
   return {
@@ -77,6 +86,7 @@ export const createGuessingSession = (targetTeamId: string, targetTeamName: stri
     $revealedHints,
     $guessHistory,
     $earnedScore,
+    $scoreBreakdown,
     $isCompleted,
 
     sendToServer,

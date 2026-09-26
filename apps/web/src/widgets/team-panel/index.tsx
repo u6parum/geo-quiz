@@ -2,7 +2,7 @@ import { useState } from 'react';
 import type { Store } from 'effector';
 import { useUnit } from 'effector-react';
 
-import type { Guess, Hint } from '@shared/contracts';
+import type { Guess, Hint, ScoreBreakdown } from '@shared/contracts';
 
 import { Card, Button, Input, Badge } from '@ui';
 
@@ -12,6 +12,7 @@ interface TeamPanelProps {
   $revealedHints: Store<Hint[]>;
   $isCompleted: Store<boolean>;
   $earnedScore: Store<number>;
+  $scoreBreakdown: Store<ScoreBreakdown | null>;
   $guessHistory: Store<Guess[]>;
   submitGuess: (text: string) => void;
 }
@@ -21,12 +22,14 @@ export const TeamPanel: React.FC<TeamPanelProps> = ({
   $revealedHints,
   $isCompleted,
   $earnedScore,
+  $scoreBreakdown,
   $guessHistory,
   submitGuess,
 }) => {
   const hints = useUnit($revealedHints);
   const isCompleted = useUnit($isCompleted);
   const earnedScore = useUnit($earnedScore);
+  const breakdown = useUnit($scoreBreakdown);
   const history = useUnit($guessHistory);
 
   const [guess, setGuess] = useState('');
@@ -60,6 +63,26 @@ export const TeamPanel: React.FC<TeamPanelProps> = ({
         ))}
         {hints.length === 0 && <div className="text-sm text-gray-400 italic">Подсказки пока не открыты</div>}
       </div>
+
+      {/* Разбор начисления очков */}
+      {isCompleted && breakdown && (
+        <div className="mt-3 p-2 rounded bg-gray-50 text-sm">
+          <div className="flex justify-between">
+            <span className="text-gray-600">За скорость</span>
+            <span className="font-mono">{breakdown.timeScore}</span>
+          </div>
+          <div className="flex justify-between">
+            <span className="text-gray-600">Коэффициент за вопросы</span>
+            <span className="font-mono">×{breakdown.questionFactor.toFixed(2)}</span>
+          </div>
+          <div className="flex justify-between">
+            <span className="text-gray-600">Вопросов задано</span>
+            <span className="font-mono">
+              {breakdown.questionsUsed} из {breakdown.questionsBudget}
+            </span>
+          </div>
+        </div>
+      )}
 
       {/* Поле ввода */}
       {!isCompleted && (
