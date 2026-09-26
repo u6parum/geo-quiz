@@ -71,7 +71,7 @@ export type GameStateEvent = {
  */
 export type TimeSyncEvent = {
   type: 'TIME_SYNC';
-  payload: { serverTime: number; clientTime: number; elapsedSeconds: number };
+  payload: { serverTime: number; clientTime?: number; elapsedSeconds: number };
 };
 
 export type HintsRevealedEvent = {

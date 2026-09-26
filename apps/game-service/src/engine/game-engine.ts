@@ -12,9 +12,9 @@ import type { EngineConfig, FinalScores, GameState, LandmarkData, TeamState } fr
 import { calculateScore } from './scoring';
 
 import { gameRepo } from '../db/repositories/game.repo';
-import { EngineEvent } from './events';
+import { EngineEvent, type EngineEventMap } from './events';
 
-export class GameEngine extends EventEmitter {
+export class GameEngine extends EventEmitter<EngineEventMap> {
   private state: GameState;
   private timerInterval: ReturnType<typeof setInterval> | null = null;
   private autoSaveInterval: ReturnType<typeof setInterval> | null = null;
