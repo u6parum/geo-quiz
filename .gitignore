@@ -1,5 +1,14 @@
-**/generated
-**/node_modules
-.nx
+# Зависимости и сборка (для всех пакетов монорепозитория)
+**/db/generated/
+**/node_modules/
+**/dist/
+
+# Системные папки
+.nx/
+.git/
+.vscode/
+.opencode/
+
 .claudeignore
-senior
+.opencodeignore
+CLAUDE.md
