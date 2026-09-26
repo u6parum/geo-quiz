@@ -33,7 +33,7 @@ export function setupEngineEvents(
     });
   });
 
-  engine.on(EngineEvent.GuessResult, ({ teamId, targetTeamId, isCorrect, earnedScore, elapsedSeconds, teamScore }) => {
+  engine.on(EngineEvent.GuessResult, ({ teamId, targetTeamId, isCorrect, earnedScore, elapsedSeconds, teamScore, breakdown }) => {
     sendTo(teamId, {
       type: 'GUESS_RESULT',
       payload: {
@@ -42,6 +42,7 @@ export function setupEngineEvents(
         earnedScore,
         elapsedSeconds,
         teamScore,
+        breakdown,
       },
     });
 

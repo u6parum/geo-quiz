@@ -1,6 +1,7 @@
 import type { GamePhase, ActiveGameSubPhase } from '@shared/contracts/game';
 import type { Landmark, LandmarkStatus } from '@shared/contracts/landmark';
 import type { Question, Answer } from '@shared/contracts/question';
+import type { ScoreBreakdown } from '@shared/contracts/scoring';
 
 export type LandmarkData = Pick<Landmark, 'description' | 'hints' | 'name'>;
 export type LandmarkStateData = Pick<Landmark, 'teamId' | 'hints' | 'name'>;
@@ -17,6 +18,7 @@ export interface TeamState {
       earnedScore: number;
       elapsedAt: number;
       attempts: string[];
+      breakdown: ScoreBreakdown | null;
     }
   >;
   questionsRemaining: Map<string, number>; // teamId → сколько вопросов осталось

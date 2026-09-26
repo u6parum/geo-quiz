@@ -1,6 +1,7 @@
 import type { ActiveGameSubPhase, GamePhase } from '../game';
 import type { Hint, HintGroup } from '../landmark';
 import type { Answer, PendingQuestion, Question } from '../question';
+import type { ScoreBreakdown } from '../scoring';
 import type { TeamBase } from '../team';
 
 export type FatalErrorCode =
@@ -48,6 +49,7 @@ export interface RestoredGuess {
   isCorrect: boolean;
   earnedScore: number;
   attempts: string[];
+  breakdown: ScoreBreakdown | null;
 }
 
 export interface AssignedLandmark {
@@ -90,6 +92,7 @@ export type GuessResultEvent = {
     earnedScore: number;
     elapsedSeconds: number;
     teamScore: number;
+    breakdown: ScoreBreakdown | null;
   };
 };
 

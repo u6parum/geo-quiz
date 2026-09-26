@@ -372,6 +372,18 @@ export class GameEngine extends EventEmitter<EngineEventMap> {
   // ДОГАДКИ
   // ==================
 
+  // Сколько вопросов команда задала этой цели за всю игру
+  private getQuestionsUsed(teamId: string, targetTeamId: string): number {
+    return this.state.questions.filter(
+      (question) => question.fromTeamId === teamId && question.toTeamId === targetTeamId,
+    ).length;
+  }
+
+  // Сколько вопросов команда могла задать этой цели за всю игру: лимит сбрасывается при каждой группе подсказок
+  private getQuestionsBudget(): number {
+    return GameEngine.questionCounter * this.state.hintsSchedule.length;
+  }
+
   submitGuess(teamId: string, targetTeamId: string, text: string) {
     const team = this.state.teams.get(teamId);
 
@@ -397,7 +409,15 @@ export class GameEngine extends EventEmitter<EngineEventMap> {
     }
 
     const isCorrect = text.trim().toLowerCase() === landmark.name.toLowerCase();
-    const earnedScore = isCorrect ? calculateScore(this.state.elapsedSeconds, this.state.durationSeconds) : 0;
+    const breakdown = isCorrect
+      ? calculateScore(
+          this.state.elapsedSeconds,
+          this.state.durationSeconds,
+          this.getQuestionsUsed(teamId, targetTeamId),
+          this.getQuestionsBudget(),
+        )
+      : null;
+    const earnedScore = breakdown?.total ?? 0;
 
     // Сохраняем догадку
     team.guesses.set(targetTeamId, {
@@ -405,6 +425,7 @@ export class GameEngine extends EventEmitter<EngineEventMap> {
       earnedScore,
       elapsedAt: this.state.elapsedSeconds,
       attempts: [...(existing?.attempts ?? []), text],
+      breakdown,
     });
 
     if (isCorrect) {
@@ -418,6 +439,7 @@ export class GameEngine extends EventEmitter<EngineEventMap> {
       earnedScore,
       elapsedSeconds: this.state.elapsedSeconds,
       teamScore: team.score,
+      breakdown,
     });
   }
 
@@ -609,6 +631,7 @@ export class GameEngine extends EventEmitter<EngineEventMap> {
       isCorrect: guess.isCorrect,
       earnedScore: guess.earnedScore,
       attempts: guess.attempts,
+      breakdown: guess.breakdown ?? null,
     }));
 
     return {
